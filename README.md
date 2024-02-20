@@ -2,7 +2,9 @@
 
 ## Overview
 
-This set of scripts is designed to scrape data from LinkedIn, specifically focusing on profiles related to the search term "Software Developer." The data extracted includes information such as name, position, profile link, and a list of skills. The scripts use Selenium for web scraping, Beautiful Soup for HTML parsing, and PostgreSQL for data storage.
+This set of scripts is designed to scrape data from LinkedIn, specifically focusing on profiles related to the search term "Software Developer." The data extracted includes information such as name, position, profile link, and a list of skills. The scripts use Selenium for web scraping, Beautiful Soup for HTML parsing, and PostgreSQL for data storage
+![Alt text](https://github.com/piyushsoni813/Prospace_web-scrape/blob/master/Postgresql%20Screenshot.png)
+![Alt text](https://github.com/piyushsoni813/Prospace_web-scrape/blob/master/CSV_ScreenShot.png)
 
 ## Prerequisites
 
