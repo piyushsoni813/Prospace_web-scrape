@@ -1,55 +1,20 @@
+import psycopg2
+from psycopg2 import Error
 import os
-from time import sleep
-from bs4 import BeautifulSoup
-import pandas as pd
-from dotenv import load_dotenv
-from selenium import webdriver
+import csv
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
-import psycopg2
-
-class webconnector:
-    def __init__(self):
-        self.driver = self.initialize_driver()
-
-    def initialize_driver(self):
-        chrome_options = webdriver.ChromeOptions()
-        return webdriver.Chrome(options=chrome_options)
-
-    def wait_for_element(self, by, value, timeout=15):
-        try:
-            return WebDriverWait(self.driver, timeout).until(EC.presence_of_element_located((by, value)))
-        except TimeoutException:
-            print(f"Timeout waiting for element {by}: {value}")
-            return None
-
-    def close_driver(self):
-        self.driver.quit()
-
+from time import sleep
+from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+from webdriver import linkedin_scraper
 
 if __name__ == "__main__":
-    linkedin_scraper = webconnector()
+    while True:
+        user_interrupt = input("Press Enter to proceed: ")
+        if not user_interrupt:  # Check if the input is empty
+            break
 
-    linkedin_scraper.driver.get('http://www.linkedin.com')
-
-    load_dotenv()
-    linkedin_password = os.getenv('linkedin_pw')
-    linkedin_username = os.getenv('linkedin_uid')
-
-    # Login logic
-    email_input = linkedin_scraper.wait_for_element(By.ID, 'session_key')
-    email_input.send_keys(linkedin_username)
-
-    password_input = linkedin_scraper.wait_for_element(By.ID, 'session_password')
-    password_input.send_keys(linkedin_password)
-
-    log_in_button = linkedin_scraper.wait_for_element(By.CLASS_NAME, 'sign-in-form__submit-btn--full-width')
-    log_in_button.click()
-
-    # Search logic
     search_button = linkedin_scraper.wait_for_element(By.CLASS_NAME, 'search-global-typeahead__collapsed-search-button')
     search_button.click()
 
@@ -58,20 +23,46 @@ if __name__ == "__main__":
     search_input.send_keys('Software Developer')
     search_input.send_keys(Keys.RETURN)
 
-    button = linkedin_scraper.wait_for_element(By.XPATH, '//button[text()="People"]')
-    button.click()
+    button_people = linkedin_scraper.wait_for_element(By.XPATH, '//button[text()="People"]')
+    button_people.click()
 
-    total_pages = 1  # Set the desired number of pages
+    total_pages = 35  # Set the desired number of pages
     page_count = 0
+
+    csv_file_path = 'output.csv'
+
+    # Establishing a connection to the PostgreSQL database
+    try:
+        conn = psycopg2.connect(
+            dbname=os.getenv('db_name'),
+            user=os.getenv('db_user'),
+            password=os.getenv('db_password'),
+            host=os.getenv('db_host'),
+            port=os.getenv('db_port')
+        )
+        cur = conn.cursor()
+
+        # Check if the table exists, if not, create it
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS Prospace_algobulls (
+                name VARCHAR,
+                position VARCHAR,
+                person_link VARCHAR,
+                skills VARCHAR
+            )
+        """)
+        conn.commit()
+
+    except (Exception, Error) as error:
+        print("Error while connecting to PostgreSQL:", error)
 
     profile_links = []
     for page in range(total_pages):
         # Wait for search results to load
         search_link = "https://www.linkedin.com/search/results/people/?keywords=software%20developer&origin=SWITCH_SEARCH_VERTICAL&page=" + str(page_count + 1)
         search_results = linkedin_scraper.driver.get(search_link)
-        search_results = linkedin_scraper.wait_for_element(By.XPATH, '//li[@class="reusable-search__result-container"]')
-
-        # Your existing logic to retrieve profile links
+        linkedin_scraper.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        sleep(0.1)
         html_page = linkedin_scraper.driver.page_source
         soup = BeautifulSoup(html_page, 'html.parser')
         span_tags = soup.find_all('span', class_='entity-result__title-text t-16')
@@ -84,15 +75,52 @@ if __name__ == "__main__":
         page_count += 1
         sleep(1)
     
-    for person_link in profile_links:
-        person_page = linkedin_scraper.driver.get(person_link)
-        html_page = linkedin_scraper.driver.page_source
-        soup = BeautifulSoup(html_page, 'html.parser')
-
-        name = soup.find('h1', class_='text-heading-xlarge inline t-24 v-align-middle break-words').text
-        position = soup.find('div', class_='text-body-medium break-words').text
-        skill_link = soup.find('a', class_="optional-action-target-wrapper artdeco-button artdeco-button--tertiary artdeco-button--standard artdeco-button--2 artdeco-button--muted inline-flex justify-center full-width align-items-center artdeco-button--fluid").get('href')
+    with open(csv_file_path, 'w', newline='', encoding='utf-8') as csvfile:
+        writer = csv.writer(csvfile)
         
-        print("Name:", name, "Position:", position, "Skill_Link:", skill_link)
-
+        writer.writerow(['name', 'position', 'person_link', 'skills'])
         
+        for person_link in profile_links:
+            sleep(2)
+            linkedin_scraper.driver.get(person_link)
+            linkedin_scraper.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            sleep(0.1)
+            person_html_page = linkedin_scraper.driver.page_source
+            soup = BeautifulSoup(person_html_page, 'html.parser')
+            name = soup.find('h1', class_='text-heading-xlarge inline t-24 v-align-middle break-words').text.strip()
+            position = soup.find('div', class_='text-body-medium break-words').text.strip()
+            sleep(1)
+            
+            try:
+                section_element = linkedin_scraper.driver.find_element('xpath',"//section[div[@id='skills']]")
+                anchor_tag = section_element.find_elements('xpath' , ".//a")
+                skill_link = anchor_tag[-1].get_attribute("href")
+                linkedin_scraper.driver.get(skill_link)
+                sleep(0.5)
+                linkedin_scraper.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                sleep(0.1)
+                skills_html_page = linkedin_scraper.driver.page_source
+                soup = BeautifulSoup(skills_html_page, 'html.parser')
+                skill_span_elements = soup.find_all('div', class_='display-flex align-items-center mr1 hoverable-link-text t-bold')
+                skill_span_html_code = ""
+                for element in skill_span_elements:
+                    skill_span_html_code += str(element)
+                skill_soup = BeautifulSoup(skill_span_html_code, 'html.parser')
+                span_elements = skill_soup.find_all('span', {'aria-hidden': 'true'})
+                skill_list = [span.get_text(strip=True) for span in span_elements]
+                skills = ''
+                skills = "|".join(skill_list)
+                print(skills)
+            except:
+                skills = "NOT PRESENT"
+            print("Name: ", name, " Position: ", position, " UserLink: ", person_link, " Skill-Set: ", skills)
+            writer.writerow([name, position, person_link, skills])
+            sql = "INSERT INTO Prospace_algobulls (name, position, person_link, skills) VALUES (%s, %s, %s, %s)"
+            cur.execute(sql, (name, position, person_link, skills))
+            conn.commit()
+        
+    print("CSV file saved successfully.")
+    print("Data Saved Succesfully in SQL Server")
+    linkedin_scraper.close_driver()
+    cur.close()
+    conn.close()
