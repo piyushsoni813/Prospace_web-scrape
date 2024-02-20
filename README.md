@@ -10,11 +10,9 @@ This set of scripts is designed to scrape data from LinkedIn, specifically focus
 
 2. **Dependencies:** Install the required Python packages by running:
 
-   ```bash
-
-   pip install psycopg2 selenium beautifulsoup4 python-dotenv
-
-   ```
+```bash
+pip install psycopg2 selenium beautifulsoup4 python-dotenv
+```
 
 3. **WebDriver:** These scripts use the Chrome WebDriver. Make sure to download the appropriate version from [ChromeDriver](https://sites.google.com/chromium.org/driver/) and place it in your system's PATH.
 
@@ -22,25 +20,17 @@ This set of scripts is designed to scrape data from LinkedIn, specifically focus
 
 1. **Environment Variables:** Create a `.env` file in the same directory as the scripts with the following content:
 
-   ```env
+```env
+  db_name=<your_database_name>
+  db_user=<your_database_user>
+  db_password=<your_database_password>
+  db_host=<your_database_host>
+  db_port=<your_database_port>
+  linkedin_pw=<your_linkedin_password>
+  linkedin_uid=<your_linkedin_username>
+```
 
-   db_name=<your_database_name>
-
-   db_user=<your_database_user>
-
-   db_password=<your_database_password>
-
-   db_host=<your_database_host>
-
-   db_port=<your_database_port>
-
-   linkedin_pw=<your_linkedin_password>
-
-   linkedin_uid=<your_linkedin_username>
-
-   ```
-
-   Replace `<your_...>` with your actual database and LinkedIn credentials.
+  Replace `<your_...>` with your actual database and LinkedIn credentials.
 
 2. **Total Pages:** Adjust the `total_pages` variable in `script1.py` to control the number of pages to scrape.
 
@@ -48,11 +38,9 @@ This set of scripts is designed to scrape data from LinkedIn, specifically focus
 
 1. **Execute Script 1:** Open a terminal and run the following command:
 
-   ```bash
-
-   python scrapper.py
-
-   ```
+```bash
+  python scrapper.py
+```
 
    The script will prompt you to press Enter to proceed. After completion, it will save the scraped data in both a CSV file (`output.csv`) and a PostgreSQL database.
 
