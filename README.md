@@ -16,6 +16,21 @@ pip install psycopg2 selenium beautifulsoup4 python-dotenv
 
 3. **WebDriver:** These scripts use the Chrome WebDriver. Make sure to download the appropriate version from [ChromeDriver](https://sites.google.com/chromium.org/driver/) and place it in your system's PATH.
 
+4. Create a Python virtual environment {Python Version 3.10.11}
+```bash
+python -m venv your_venv_name
+```
+5. install PIP requirements from req.txt
+for linux
+```bash
+source your_venv_name\bin\activate
+pip install -r req.txt
+```
+for windows
+```bash
+./your_venv_name/Scripts/activate
+pip install -r req.txt
+```
 ## Configuration
 
 1. **Environment Variables:** Create a `.env` file in the same directory as the scripts with the following content:
