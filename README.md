@@ -36,7 +36,7 @@ pip install psycopg2 selenium beautifulsoup4 python-dotenv
 
 ## Running the Scripts
 
-1. **Execute Script 1:** Open a terminal and run the following command:
+1. **Execute scrapper.py:** Open a terminal and run the following command:
 
 ```bash
   python scrapper.py
@@ -44,7 +44,7 @@ pip install psycopg2 selenium beautifulsoup4 python-dotenv
 
    The script will prompt you to press Enter to proceed. After completion, it will save the scraped data in both a CSV file (`output.csv`) and a PostgreSQL database.
 
-2. **Execute Script 2:** There's no need to run this script separately. It is imported as a module in `scrapper.py` and used for initializing the WebDriver and logging into LinkedIn.
+2. **Execute webdriver.py:** There's no need to run this script separately. It is imported as a module in `scrapper.py` and used for initializing the WebDriver and logging into LinkedIn.
 
 ## Important Notes
 
